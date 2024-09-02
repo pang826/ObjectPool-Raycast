@@ -1,36 +1,62 @@
 using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class Monster : MonoBehaviour
 {
+    // 구현실패..
+    [SerializeField]
+    Monster prefab;
     [SerializeField]
     float hp;
     [SerializeField]
     float spawnIndex;
+    Coroutine spawnDelayTime;
     private void Awake()
     {
-        hp = 3f;
+        prefab = this;
+        hp = 5f;
         // 가상의 오브젝트로 재어보니 plane의 x좌표 및 z좌표가 대략 -25부터 25까지인것을 알아냄
         // 안전하게 24로 결정
         spawnIndex = 24;
+        transform.position = new Vector3(Random.Range(-spawnIndex, spawnIndex), 0, Random.Range(-spawnIndex, spawnIndex));
     }
-    private void Start()
-    {
-        Spawn();
-    }
+
     public void HitDmg(float dmg)
     {
         hp -= dmg;
-        if(hp <= 0)
+        if (hp <= 0)
         {
-            Spawn();
+            MonsterObjectPool.DestroyMonster(this);
+            spawnDelayTime = StartCoroutine(SpawnDelayTime());
         }
     }
-
-    public void Spawn()
+    private void OnDisable()
     {
-        transform.position = new Vector3(Random.Range(-spawnIndex, spawnIndex), 0, Random.Range(-spawnIndex, spawnIndex));
+
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            //spawnDelayTime = StartCoroutine(SpawnDelayTime());
+            //StopCoroutine(spawnDelayTime);
+        }
+    }
+    public Monster Spawn()
+    {
+        Monster instance = MonsterObjectPool.GetMonster(this);
+        instance.transform.position = new Vector3(Random.Range(-spawnIndex, spawnIndex), 0, Random.Range(-spawnIndex, spawnIndex));
+
+        //hp = 5f;
+        return instance;
+    }
+
+    public IEnumerator SpawnDelayTime()
+    {
+        
+        WaitForSeconds delay = new WaitForSeconds(3);
+        yield return delay;
+        Spawn();
     }
 }

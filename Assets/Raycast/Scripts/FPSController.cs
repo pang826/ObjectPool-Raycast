@@ -10,6 +10,16 @@ public class FPSController : MonoBehaviour
     float moveSpeed;
     [SerializeField]
     Transform camTrans;
+    [SerializeField]
+    LayerMask layerMask;
+    [SerializeField]
+    Coroutine autoFire;
+    [SerializeField] 
+    float fireDelayTime;
+    [SerializeField]
+    Bullet prefab;
+    [SerializeField]
+    Transform shotPoint;
     private void Start()
     {
         Cursor.visible = false;
@@ -23,9 +33,16 @@ public class FPSController : MonoBehaviour
     {
         Move();
         Look();
+
         if(Input.GetMouseButtonDown(0))
         {
-            Fire();
+            // 코루틴 시작
+            autoFire = StartCoroutine(AutoFire(fireDelayTime));
+        }
+        else if(Input.GetMouseButtonUp(0))
+        {
+            // 코루틴 해제
+            StopCoroutine(autoFire); // StopCoroutine 의 매개변수는 Start와 다르게 함수가 아닌 코루틴 인스턴스이름이 들어가야함
         }
     }
     private void Move()
@@ -47,17 +64,39 @@ public class FPSController : MonoBehaviour
 
     private void Fire()
     {
+        //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        //if(Physics.Raycast(ray.origin, ray.direction, out RaycastHit hit, 30, layerMask))
+        //{
+        //    Debug.DrawRay(ray.origin, ray.direction * 100, Color.red, 0.2f);
+        //    GameObject gameObject = hit.collider.gameObject;
+        //    Target target = gameObject.GetComponent<Target>();
+        //    Monster monster = gameObject.GetComponent<Monster>();
+        //            if (monster != null)
+        //    {
+        //        monster.HitDmg(1);
+        //    }
+        //}
+        // 안보고 입력하기 연습
+        Bullet instance = BulletObjectPool.GetBullet(prefab);
+        instance.transform.position = shotPoint.position;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if(Physics.Raycast(ray.origin, ray.direction, out RaycastHit hit, 30))
+        if(Physics.Raycast(ray.origin, ray.direction, out RaycastHit hit, layerMask))
         {
-            GameObject gameObject = hit.collider.gameObject;
-            Target target = gameObject.GetComponent<Target>();
-            Monster monster = gameObject.GetComponent<Monster>();
-
-            if (monster != null)
+            Monster monster = hit.collider.gameObject.GetComponent<Monster>();
+            if(monster != null)
             {
                 monster.HitDmg(1);
             }
+        }
+    }
+
+    private IEnumerator AutoFire(float seconds)
+    {
+        WaitForSeconds delay = new WaitForSeconds(seconds);
+        while(true)
+        {
+            Fire();
+            yield return delay;
         }
     }
 }

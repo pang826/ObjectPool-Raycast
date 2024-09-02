@@ -27,7 +27,6 @@ public class BulletState : MonoBehaviour
 
     private void Update()
     {
-        
         curTime -= Time.deltaTime;
         if (curTime < 0)
         {
